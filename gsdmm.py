@@ -6,6 +6,7 @@ from numpy.random import multinomial
 import numpy as np
 
 from cluster import Cluster
+from doc import Doc
 
 
 class GSDMM:
@@ -76,24 +77,25 @@ class GSDMM:
         return np.argwhere(mult == 1)[0][0]
 
     @staticmethod
-    def calc_v(docs):
+    def calc_v(docs: list[Doc]):
         """
         calculates vocabulary size
         :param docs: all given training documents
         """
         words = set()
         for d in docs:
-            for word in d:
+            for word in d.to_list():
                 words.add(word)
         return len(words)
 
-    def prob_formula(self, doc:list):
+    def prob_formula(self, doc:Doc):
         """
         formula number 3 in the paper
         """
         assert self.is_fit
 
         p = []
+        doc = doc.to_list()
         nd = len(doc)
         denom = log(self.D - 1 + self.K * self.alpha)
         for l in range(self.K):
@@ -123,7 +125,7 @@ class GSDMM:
                 res += 1
         return res
 
-    def fit(self, docs: list):
+    def fit(self, docs: list[Doc]):
         """
         performs the training\clustering stage on the data
 
@@ -162,7 +164,7 @@ class GSDMM:
 
         return zd
 
-    def predict(self, doc):
+    def predict(self, doc:Doc):
         """
         :param doc: list of strings representing a message
         :return: cluster, confidence for message

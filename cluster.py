@@ -1,3 +1,5 @@
+from doc import Doc
+
 
 class Cluster:
     """
@@ -39,7 +41,7 @@ class Cluster:
         """
         return {Cluster.MZ: self.mz, Cluster.NZ: self.nz, Cluster.NWZ: self.nwz, Cluster.PRED_COUNT: self.pred_count}
 
-    def step(self, doc, sign=1):
+    def step(self, doc:Doc, sign=1):
         """
         update cluster
         :param doc: single document - list of words (strings)
@@ -47,8 +49,10 @@ class Cluster:
         :return:
         """
         self.mz += 1 * sign
-        self.nz += len(doc) * sign
-        for word in doc:
+        if doc.is_predator:
+            self.pred_count += 1 * sign
+        self.nz += len(doc.to_list()) * sign
+        for word in doc.to_list():
             if word not in self.nwz:
                 self.nwz[word] = 1
             else:
