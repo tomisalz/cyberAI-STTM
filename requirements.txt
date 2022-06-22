@@ -1,0 +1,5 @@
+xmltodict
+nltk
+wordcloud
+lxml
+xmltodict
