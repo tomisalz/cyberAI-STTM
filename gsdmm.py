@@ -130,8 +130,8 @@ class GSDMM:
         return zd
 
     def predict(self, doc):
+        assert self.is_fit
         resp = self.prob_formula(doc)
         return argmax(resp), max(resp)
 
-# print(word_tokenize("hello my name is tom"))
-# print(GSDMM.sample(random.randint(0, 100), []))
+

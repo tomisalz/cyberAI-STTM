@@ -6,6 +6,7 @@ from nltk.corpus import stopwords
 # nltk.download('stopwords')
 # nltk.download('punkt')
 
+stopwordss = stopwords.words()
 
 class Doc:
 
@@ -27,7 +28,7 @@ class Doc:
 
         text_tokens = word_tokenize(new_string)
 
-        self.list = [word for word in text_tokens if word not in stopwords.words()]
+        self.list = [word for word in text_tokens if word not in stopwordss]
 
     def to_list(self):
         return self.list
