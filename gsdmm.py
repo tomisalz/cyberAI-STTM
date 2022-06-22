@@ -139,7 +139,7 @@ class GSDMM:
         cur_clusters = self.cluster_count()
         for i, doc in enumerate(docs):  # choose random cluster for doc
 
-            assert type(doc) == list  # we assume doc is a list of words
+            assert type(doc) == Doc  # we assume doc is a list of words
             z = GSDMM.sample(self.K, [])
 
             zd[i] = z
