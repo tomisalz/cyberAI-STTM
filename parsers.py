@@ -3,6 +3,10 @@ import pandas as pd
 from doc import Doc
 import lxml.etree as ET
 import xmltodict
+
+from os import walk
+
+
 DEF_TWEETS = "twcs.csv"
 MAX_TWEETS = 100_000
 POST = "POST"
@@ -13,6 +17,7 @@ SCREENNAME = "SCREENNAME"
 USERNAME = "USERNAME"
 VICTIM = "VICTIM"
 TEXT = "#text"
+PATH = "GeneralData"
 
 
 
@@ -71,12 +76,14 @@ def get_mult_users_messages(data, users):
     return res
 
 
-def parse_xml(files):
+
+def parse_xml(filepath=PATH):
     docs = []
     lists = []
     parser = ET.XMLParser(encoding="utf-8", recover=True)
+    filenames = next(walk(filepath), (None, None, []))[2]  # [] if no file
 
-    for f in files:
+    for f in filenames:
         if f.endswith("xml"):
             try:
                 data = xmltodict.parse(ET.tostring(ET.parse(f"{PATH}/{f}", parser=parser).getroot()))
