@@ -77,7 +77,7 @@ class GSDMM:
         return np.argwhere(mult == 1)[0][0]
 
     @staticmethod
-    def calc_v(docs: list[Doc]):
+    def calc_v(docs: list):
         """
         calculates vocabulary size
         :param docs: all given training documents
@@ -125,7 +125,7 @@ class GSDMM:
                 res += 1
         return res
 
-    def fit(self, docs: list[Doc]):
+    def fit(self, docs: list):
         """
         performs the training\clustering stage on the data
 
