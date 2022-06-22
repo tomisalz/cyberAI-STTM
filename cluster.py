@@ -28,8 +28,8 @@ class Cluster:
                 self.nwz[word] += 1 * sign
 
     def stats(self):
-        if self.nz > 0:
-            return self.pred_count / self.nz
+        if self.mz > 0:
+            return self.pred_count / self.mz
         else:
             return 0.0
 
