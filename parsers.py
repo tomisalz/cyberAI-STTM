@@ -83,7 +83,7 @@ def parse_xml(filepath=PATH):
     parser = ET.XMLParser(encoding="utf-8", recover=True)
     filenames = next(walk(filepath), (None, None, []))[2]  # [] if no file
 
-    for f in filenames:
+    for idx,f in enumerate(filenames):
         if f.endswith("xml"):
             try:
                 data = xmltodict.parse(ET.tostring(ET.parse(f"{PATH}/{f}", parser=parser).getroot()))
@@ -104,6 +104,11 @@ def parse_xml(filepath=PATH):
                 # print(a, b)
                 # break
             except Exception as e: pass
+
+            if idx % 10 == 0:
+                print(f"Done parsing {idx + 1} out of {len(filenames)}")
+    print("finished parsing all chats!")
+
     return docs, lists
 
 
@@ -111,7 +116,7 @@ def parse_tweets(csv_filepath=DEF_TWEETS):
     csvv = pd.read_csv(csv_filepath)
     docs, lists = [], []
 
-    for cs in csvv['text'][:MAX_TWEETS]:
+    for idx, cs in enumerate(csvv['text'][:MAX_TWEETS]):
         try:
             first_space = cs.index(' ')
 
@@ -123,4 +128,7 @@ def parse_tweets(csv_filepath=DEF_TWEETS):
             lists.append(d.to_list())
         except: pass
 
+        if idx % 1000 == 0:
+            print(f"Done parsing {idx + 1} out of {len(csvv['text'][:MAX_TWEETS])}")
+    print("finished parsing all tweets!")
     return docs, lists

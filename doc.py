@@ -1,4 +1,5 @@
 import nltk
+from nltk import PorterStemmer
 from nltk.tokenize import word_tokenize
 import string
 from nltk.corpus import stopwords
@@ -7,6 +8,7 @@ from nltk.corpus import stopwords
 # nltk.download('punkt')
 
 stopwordss = stopwords.words()
+ps = PorterStemmer()
 
 class Doc:
 
@@ -29,6 +31,7 @@ class Doc:
         text_tokens = word_tokenize(new_string)
 
         self.list = [word for word in text_tokens if word not in stopwordss]
+        self.list = [ps.stem(word) for word in self.list]
 
     def to_list(self):
         return self.list
