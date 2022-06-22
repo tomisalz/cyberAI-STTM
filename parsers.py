@@ -119,7 +119,7 @@ def parse_xml(filepath=PATH):
     :return: doc objects of each message
     """
     docs = []
-    lists = []
+
     parser = ET.XMLParser(encoding="utf-8", recover=True)
     filenames = next(walk(filepath), (None, None, []))[2]  # [] if no file
     average = 0
@@ -136,7 +136,6 @@ def parse_xml(filepath=PATH):
                         d = Doc(author, True, message)
                         average += time.time() - start
                         docs.append(d)
-                        lists.append(d.to_list())
                 for author in b:
                     for message in get_user_messages(data, author):
                         start = time.time()
@@ -144,16 +143,15 @@ def parse_xml(filepath=PATH):
                         average += time.time() - start
 
                         docs.append(d)
-                        lists.append(d.to_list())
 
             except Exception as e: pass
 
             if idx % 10 == 0:
                 print(f"Done parsing {idx + 1} out of {len(filenames)}")
-    average = average / len(lists)
+    average = average / len(docs)
     print(f"finished parsing all chats! Average processing time for message: {average}")
 
-    return docs, lists
+    return docs
 
 
 def parse_tweets(csv_filepath=DEF_TWEETS):
@@ -162,7 +160,7 @@ def parse_tweets(csv_filepath=DEF_TWEETS):
     :param csv_filepath: filepath to csv of tweets
     """
     csvv = pd.read_csv(csv_filepath, encoding='latin-1', names=['target', 'id', 'date', 'flag', 'user', 'text'])
-    docs, lists = [], []
+    docs = []
     average = 0
     for idx, (text,user) in enumerate(zip(csvv['text'][:MAX_TWEETS], csvv['user'][:MAX_TWEETS])):
 
@@ -171,12 +169,11 @@ def parse_tweets(csv_filepath=DEF_TWEETS):
             d = Doc(user, False, text)
             average += time.time() - start
             docs.append(d)
-            lists.append(d.to_list())
 
         except: pass
 
         if idx % 1000 == 0:
             print(f"Done parsing {idx + 1} out of {len(csvv[:MAX_TWEETS])}")
-    print(f"finished parsing all tweets! Average time per tweet is {average / len(lists)}")
-    return docs, lists
+    print(f"finished parsing all tweets! Average time per tweet is {average / len(docs)}")
+    return docs
 
