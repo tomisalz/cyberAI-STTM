@@ -172,7 +172,7 @@ def parse_tweets(csv_filepath=DEF_TWEETS):
             average += time.time() - start
             docs.append(d)
             lists.append(d.to_list())
-            print(d.to_list())
+
         except: pass
 
         if idx % 1000 == 0:
