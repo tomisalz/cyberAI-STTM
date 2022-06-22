@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 
 
 def create_word_cloud(word_dict):
-
+    """
+    creates a word cloud
+    :param word_dict:
+    :return:
+    """
 
     wordcloud = WordCloud(background_color='#fcf2ed',
                                 width=1800,

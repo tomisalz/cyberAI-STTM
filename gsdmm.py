@@ -9,6 +9,9 @@ from cluster import Cluster
 
 
 class GSDMM:
+    """
+    Class representing GSDMM model as characterized in https://dl.acm.org/doi/10.1145/2623330.2623715
+    """
     ALPHA = "alpha"
     BETA = "beta"
     II = "I"
@@ -26,9 +29,14 @@ class GSDMM:
         self.V = 0
         self.I = I
         self.is_fit = False
-        self.clusters = [Cluster() for i in range(self.K)]
+        self.clusters = [Cluster() for i in range(self.K)]  # init clusters
 
     def import_from_dict(self, dic):
+        """
+        import existing model from dictionary
+        :param dic:
+        :return:
+        """
         self.alpha = dic[GSDMM.ALPHA]
         self.beta = dic[GSDMM.ALPHA]
         self.K = dic[GSDMM.KK]
@@ -37,13 +45,17 @@ class GSDMM:
         self.I = dic[GSDMM.II]
         self.is_fit = dic[GSDMM.IS_FIT]
         self.clusters = []
-        for clust in dic[GSDMM.CLUSTERS]:
+        for clust in dic[GSDMM.CLUSTERS]:  # init the clusters
             newc = Cluster()
             newc.import_from_dict(clust)
             self.clusters.append(newc)
 
 
     def export_to_dict(self):
+        """
+        export trained model to dictionary
+        :return:
+        """
         return {
             GSDMM.ALPHA: self.alpha, GSDMM.BETA: self.beta, GSDMM.KK: self.K, GSDMM.DD: self.D,
             GSDMM.VV: self.V, GSDMM.II: self.I, GSDMM.IS_FIT: self.is_fit,
@@ -52,6 +64,12 @@ class GSDMM:
 
     @staticmethod
     def sample(K, p: list):
+        """
+        randomly sample a cluster
+        :param K: number of clusters
+        :param p: probability vector
+        :return:
+        """
         if not p:
             p = [1.0 / K] * K
         mult = multinomial(1, p)
@@ -59,6 +77,10 @@ class GSDMM:
 
     @staticmethod
     def calc_v(docs):
+        """
+        calculates vocabulary size
+        :param docs: all given training documents
+        """
         words = set()
         for d in docs:
             for word in d:
@@ -66,6 +88,9 @@ class GSDMM:
         return len(words)
 
     def prob_formula(self, doc:list):
+        """
+        formula number 3 in the paper
+        """
         assert self.is_fit
 
         p = []
@@ -86,6 +111,10 @@ class GSDMM:
         return p
 
     def cluster_count(self):
+        """
+        calculates number of actual clusters (that have documents in them)
+        :return:
+        """
         assert self.is_fit
 
         res = 0
@@ -95,6 +124,10 @@ class GSDMM:
         return res
 
     def fit(self, docs: list):
+        """
+        performs the training\clustering stage on the data
+
+        """
         self.D = len(docs)
 
         zd = [0] * self.D
@@ -130,6 +163,10 @@ class GSDMM:
         return zd
 
     def predict(self, doc):
+        """
+        :param doc: list of strings representing a message
+        :return: cluster, confidence for message
+        """
         assert self.is_fit
         resp = self.prob_formula(doc)
         return argmax(resp), max(resp)

@@ -1,16 +1,16 @@
-import nltk
 from nltk import PorterStemmer
 from nltk.tokenize import word_tokenize
 import string
 from nltk.corpus import stopwords
 
-# nltk.download('stopwords')
-# nltk.download('punkt')
 
 stopwordss = stopwords.words()
 ps = PorterStemmer()
 
 class Doc:
+    """
+    class to represent a single short text
+    """
 
     def __init__(self, author, is_predator: bool, text: str):
         self.author = author
@@ -26,6 +26,14 @@ class Doc:
         self.confidence = confidence
 
     def __parse(self):
+        """
+        Preprocessing stage of text. includes:
+        1. punctioation removal
+        2. tokenization
+        3. stopwords removal
+        4. stemming of words
+        :return:
+        """
         new_string = self.text.translate(str.maketrans('', '', string.punctuation))
 
         text_tokens = word_tokenize(new_string)
