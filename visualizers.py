@@ -1,7 +1,6 @@
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
-from script import GSDMM
 
 
 def create_word_cloud(word_dict):
