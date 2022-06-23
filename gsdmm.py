@@ -7,11 +7,12 @@ import numpy as np
 
 from cluster import Cluster
 from doc import Doc
+from sklearn.preprocessing import normalize
 
 
 class GSDMM:
     """
-    Class representing GSDMM model as characterized in https://dl.acm.org/doi/10.1145/2623330.2623715
+    Class representing GSDMM model as characterized in http://dbgroup.cs.tsinghua.edu.cn/wangjy/papers/KDD14-GSDMM.pdf
     """
     ALPHA = "alpha"
     BETA = "beta"
@@ -88,28 +89,32 @@ class GSDMM:
                 words.add(word)
         return len(words)
 
+
+
     def prob_formula(self, doc:Doc):
         """
-        formula number 3 in the paper
+        formula number 4 in the paper
         """
         assert self.is_fit
 
         p = []
         doc = doc.to_list()
         nd = len(doc)
-        denom = log(self.D - 1 + self.K * self.alpha)
-        for l in range(self.K):
-            n1 = log(self.clusters[l].mz + self.alpha)
-            n2 = sum([log(self.clusters[l].nwz.get(word, 0) + self.beta) for word in doc])
-            d = sum([log(self.clusters[l].nz + self.beta * self.V + j - 1) for j in range(1, 1 + nd)])
+        denom_left = log(self.D - 1 + self.K * self.alpha)
 
-            p.append(exp(n1 - denom + n2 - d))
+        for clust in range(self.K):  # we need to logify this because it exploades exponantially if not
+            nominator_left = log(self.clusters[clust].mz + self.alpha)  # mz,¬d + α, Here mz,¬d is the number of students (documents) in table z without considering student d
+            nominator_right = sum([log(self.clusters[clust].nwz.get(word, 0) + self.beta) for word in doc])  # Q w∈d QNw d j=1(n w z,¬d + β + j − 1)
+            denom_right = sum([log(self.clusters[clust].nz + self.beta * self.V + j - 1) for j in range(1, 1 + nd)]) # QNd i=1(nz,¬d + V β + i − 1)
+
+            p.append(exp(nominator_left - denom_left + nominator_right - denom_right))
 
         normalized = sum(p)
 
         if normalized <= 0:
             normalized = 1
         p = [t / normalized for t in p]
+
         return p
 
     def cluster_count(self):
@@ -149,9 +154,10 @@ class GSDMM:
             count = 0
             for doc_idx, doc in enumerate(docs):
                 old_cluster = zd[doc_idx]
-                self.clusters[old_cluster].step(doc, -1)
+                self.clusters[old_cluster].step(doc, -1) # remove doc from cluster
+
                 p = self.prob_formula(doc)
-                new_cluster = GSDMM.sample(self.K, p)
+                new_cluster = GSDMM.sample(self.K, p)  # find new cluster for doc
                 if old_cluster != new_cluster:
                     count += 1
                 zd[doc_idx] = new_cluster

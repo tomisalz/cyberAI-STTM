@@ -9,7 +9,7 @@ from parsers import parse_xml
 
 docs = parse_xml()
 
-gsdmm = GSDMM(8, 60, 0.1, 0.2)
+gsdmm = GSDMM(8, 60, 0.1, 0.1)
 gsdmm.fit(docs)
 # i = 0
 # for doc, lis in zip(docs, lists):
@@ -25,7 +25,7 @@ gsdmm.fit(docs)
 # with open("model.json", "w") as mod_f:
 #     json.dump(gsdmm.export_to_dict(), mod_f)
 #
-# for clust in gsdmm.clusters:
-#
-#     print(clust.stats(), dict(sorted(clust.nwz.items(), key=lambda x: x[1], reverse=True)[:20]))
-#     print("*"*100)
+for clust in gsdmm.clusters:
+
+    print(clust.stats(), dict(sorted(clust.nwz.items(), key=lambda x: x[1], reverse=True)[:20]))
+    print("*"*100)
