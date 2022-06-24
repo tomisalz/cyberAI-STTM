@@ -20,6 +20,7 @@ class Doc:
         self.confidence = 0.0
         self.list = []
         self.__parse()
+        self.nwd = {w: self.list.count(w) for w in set(self.list)}
 
     def set_cluster(self, cluster: int, confidence: float):
         self.cluster = cluster

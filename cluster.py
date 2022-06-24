@@ -52,11 +52,14 @@ class Cluster:
         if doc.is_predator:
             self.pred_count += 1 * sign
         self.nz += len(doc.to_list()) * sign
-        for word in doc.to_list():
-            if word not in self.nwz:
-                self.nwz[word] = 1
+        for word in doc.nwd:
+            if word not in self.nwz and sign > 0:
+                self.nwz[word] = doc.nwd[word]
             else:
-                self.nwz[word] += 1 * sign
+                self.nwz[word] += doc.nwd[word] * sign
+
+                if self.nwz[word] == 0:
+                    self.nwz.pop(word)
 
     def stats(self):
         """
