@@ -10,7 +10,7 @@ from os import walk
 
 
 DEF_TWEETS = "tweets.csv"
-MAX_TWEETS = 100_000
+MAX_TWEETS = 50_000
 POST = "POST"
 BODY = "BODY"
 PREDATOR = "PREDATOR"

@@ -37,7 +37,7 @@ class Doc:
         """
         new_string = self.text.translate(str.maketrans('', '', string.punctuation))
 
-        text_tokens = word_tokenize(new_string)
+        text_tokens = word_tokenize(self.text)
 
         self.list = [word for word in text_tokens if word not in stopwordss]
         self.list = [ps.stem(word) for word in self.list]

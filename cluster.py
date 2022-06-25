@@ -1,5 +1,6 @@
 from doc import Doc
 
+MAX_WORDS = 200
 
 class Cluster:
     """
@@ -21,6 +22,7 @@ class Cluster:
         """
         self.mz, self.nz, self.nwz = 0, 0, {}
         self.pred_count = 0
+        self.authors = {}
 
 
     def import_from_dict(self, dic):
@@ -48,6 +50,11 @@ class Cluster:
         :param sign: depending on the stage - either taking out a doc from cluster (-1) or including a doc in cluster (1)
         :return:
         """
+        if sign > 0:
+            self.authors[doc.author] = doc.is_predator
+        elif doc.author in self.authors:
+            self.authors.pop(doc.author)
+
         self.mz += 1 * sign
         if doc.is_predator:
             self.pred_count += 1 * sign
@@ -56,10 +63,16 @@ class Cluster:
             if word not in self.nwz and sign > 0:
                 self.nwz[word] = doc.nwd[word]
             else:
-                self.nwz[word] += doc.nwd[word] * sign
+                if word in self.nwz:
+                    self.nwz[word] += doc.nwd[word] * sign
 
-                if self.nwz[word] == 0:
-                    self.nwz.pop(word)
+                    if self.nwz[word] == 0:
+                        self.nwz.pop(word)
+
+        while len(self.nwz) > MAX_WORDS:
+            k = min(self.nwz, key=self.nwz.get) # https://stackoverflow.com/questions/3282823/get-the-key-corresponding-to-the-minimum-value-within-a-dictionary
+            val = self.nwz.pop(k)
+
 
     def stats(self):
         """
@@ -69,4 +82,11 @@ class Cluster:
             return self.pred_count / self.mz
         else:
             return 0.0
+
+    def pred_author_stats(self):
+        """
+        :return: ratio of predator authors
+        """
+        if self.authors:
+            return len([f for f in self.authors if self.authors[f]]) / len(self.authors)
 

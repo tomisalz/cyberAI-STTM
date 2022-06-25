@@ -10,7 +10,12 @@ from doc import Doc
 from sklearn.preprocessing import normalize
 from tqdm import tqdm
 import decimal
-decimal.getcontext().prec = 100
+decimal.getcontext().prec = 50
+
+
+
+
+
 
 class GSDMM:
     """
@@ -33,6 +38,9 @@ class GSDMM:
         self.V = 0
         self.I = I
         self.is_fit = False
+        self.denom_left = 0
+
+
         self.clusters = [Cluster() for i in range(self.K)]  # init clusters
 
     def import_from_dict(self, dic):
@@ -49,8 +57,7 @@ class GSDMM:
         self.I = dic[GSDMM.II]
         self.is_fit = dic[GSDMM.IS_FIT]
         self.clusters = []
-        self.denom_left = 0
-
+        self.denom_left = log(self.D - 1 + self.K * self.alpha)
         for clust in dic[GSDMM.CLUSTERS]:  # init the clusters
             newc = Cluster()
             newc.import_from_dict(clust)
@@ -93,32 +100,44 @@ class GSDMM:
                 words.add(word)
         return len(words)
 
+    def calc_clust_probability(self, nd, doc, clust, p):
+        """
+        Calculates the probability of doc for given cluster
+        :param nd:  count of words in doc
+        :param doc:  doc
+        :param clust: cluster index
+        :param p: array to assign result to
+        :return: None
+        """
+        nominator_left = log(self.clusters[clust].mz + self.alpha)  # mz,¬d + α, Here mz,¬d is the number of students (documents) in table z without considering student d
+        nominator_right = 0
+
+        for word in doc:  # Q w∈d QNw d j=1(n w z,¬d + β + j − 1)
+            nwd = self.clusters[clust].nwz.get(word, 0)
+            for j in range(1, nwd + 1):
+                nominator_right += log(nwd + self.beta + j - 1)  # calculations are logged for additive calculations, faster than mult
+        left = nominator_left - self.denom_left
+        denom_right = 0
+        for i in range(1, 1 + nd):
+            denom_right += log(
+                self.clusters[clust].nz + self.beta * self.V + i - 1)  # QNd i=1(nz,¬d + V β + i − 1)
+        right = nominator_right - denom_right
+        result = decimal.Decimal(left + right).exp()  # here we return from log, and handle overflow by decimal lib
+        p[clust] = result
+
     def prob_formula(self, doc:Doc):
         """
         formula number 4 in the paper
         """
         assert self.is_fit
 
-        p = []
+        p = [0] * self.K
+
         doc = doc.to_list()
         nd = len(doc)
 
-        for clust in range(self.K):  # we need to logify this because it exploades exponantially if not
-
-            nominator_left = decimal.Decimal(self.clusters[clust].mz + self.alpha)  # mz,¬d + α, Here mz,¬d is the number of students (documents) in table z without considering student d
-            nominator_right = decimal.Decimal(1.0)
-
-            for word in doc:  # Q w∈d QNw d j=1(n w z,¬d + β + j − 1)
-                nwd = self.clusters[clust].nwz.get(word, 0)
-                for j in range(1, nwd + 1):
-                    nominator_right *= decimal.Decimal(nwd + self.beta + j - 1)
-
-            denom_right = decimal.Decimal(1.0)
-            for i in range(1, 1 + nd):
-                denom_right *= decimal.Decimal(self.clusters[clust].nz + self.beta * self.V + i - 1) # QNd i=1(nz,¬d + V β + i − 1)
-
-            p.append((nominator_left / self.denom_left) * (nominator_right / denom_right))
-
+        for clust in range(self.K):
+            self.calc_clust_probability(nd, doc, clust, p)
 
         normalized = sum(p)
 
@@ -148,10 +167,10 @@ class GSDMM:
         """
         self.D = len(docs)
 
-        zd = []   # todo improve
+        zd = []
         self.V = GSDMM.calc_v(docs)
         self.is_fit = True
-        self.denom_left = decimal.Decimal(self.D - 1 + self.K * self.alpha)
+        self.denom_left = log(self.D - 1 + self.K * self.alpha)
         cur_clusters = self.cluster_count()
         for doc in docs:  # choose random cluster for doc
 
@@ -160,25 +179,28 @@ class GSDMM:
 
             zd.append(z)
             self.clusters[z].step(doc)
-
-        for _ in tqdm(range(self.I)):
+        inner = tqdm(None, total=len(docs), leave=False, position=1, desc="Documents analyzed")
+        outer = tqdm(range(self.I), leave=False, position=0,  desc="Iterations")
+        for _ in outer:
             count = 0
             for doc_idx, doc in enumerate(docs):
                 old_cluster = zd[doc_idx]
                 self.clusters[old_cluster].step(doc, -1)  # remove doc from cluster
 
                 p = self.prob_formula(doc)
+
                 new_cluster = GSDMM.sample(self.K, p)  # find new cluster for doc
                 if old_cluster != new_cluster:
                     count += 1
                 zd[doc_idx] = new_cluster
 
                 self.clusters[new_cluster].step(doc)
-
+                inner.update(1)
             num_clusters = self.cluster_count()
             if count == 0 and num_clusters == cur_clusters:
                 break  # we reach convergence
             cur_clusters = num_clusters
+            inner.reset()
 
         self.clusters = sorted(self.clusters, key=lambda x: x.stats(), reverse=True) # most risky is the first 1
         return zd
