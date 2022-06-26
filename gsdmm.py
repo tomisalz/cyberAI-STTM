@@ -60,7 +60,7 @@ class GSDMM:
         if type(dic[GSDMM.CLUSTERS]) == dict:
             for clust in dic[GSDMM.CLUSTERS]:  # init the clusters
                 newc = Cluster()
-                newc.import_from_dict(clust)
+                newc.import_from_dict(dic[GSDMM.CLUSTERS][clust])
                 self.clusters[clust] = newc
         else: #list
             for idx, clust in enumerate(dic[GSDMM.CLUSTERS]):  # init the clusters
