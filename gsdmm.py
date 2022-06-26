@@ -40,8 +40,7 @@ class GSDMM:
         self.is_fit = False
         self.denom_left = 0
 
-
-        self.clusters = [Cluster() for i in range(self.K)]  # init clusters
+        self.clusters = {i: Cluster() for i in range(self.K)}  # init clusters
 
     def import_from_dict(self, dic):
         """
@@ -56,12 +55,18 @@ class GSDMM:
         self.V = dic[GSDMM.VV]
         self.I = dic[GSDMM.II]
         self.is_fit = dic[GSDMM.IS_FIT]
-        self.clusters = []
+        self.clusters = {}
         self.denom_left = log(self.D - 1 + self.K * self.alpha)
-        for clust in dic[GSDMM.CLUSTERS]:  # init the clusters
-            newc = Cluster()
-            newc.import_from_dict(clust)
-            self.clusters.append(newc)
+        if type(dic[GSDMM.CLUSTERS]) == dict:
+            for clust in dic[GSDMM.CLUSTERS]:  # init the clusters
+                newc = Cluster()
+                newc.import_from_dict(clust)
+                self.clusters[clust] = newc
+        else: #list
+            for idx, clust in enumerate(dic[GSDMM.CLUSTERS]):  # init the clusters
+                newc = Cluster()
+                newc.import_from_dict(clust)
+                self.clusters[idx] = newc
 
 
     def export_to_dict(self):
@@ -72,7 +77,7 @@ class GSDMM:
         return {
             GSDMM.ALPHA: self.alpha, GSDMM.BETA: self.beta, GSDMM.KK: self.K, GSDMM.DD: self.D,
             GSDMM.VV: self.V, GSDMM.II: self.I, GSDMM.IS_FIT: self.is_fit,
-            GSDMM.CLUSTERS: [c.export_to_dict() for c in self.clusters]
+            GSDMM.CLUSTERS: {c: self.clusters[c].export_to_dict() for c in self.clusters}
         }
 
     @staticmethod
@@ -155,7 +160,7 @@ class GSDMM:
         assert self.is_fit
 
         res = 0
-        for r in self.clusters:
+        for r in self.clusters.values():
             if r.mz > 0:
                 res += 1
         return res
@@ -169,6 +174,7 @@ class GSDMM:
 
         zd = []
         self.V = GSDMM.calc_v(docs)
+        print(self.V)
         self.is_fit = True
         self.denom_left = log(self.D - 1 + self.K * self.alpha)
         cur_clusters = self.cluster_count()
@@ -196,13 +202,16 @@ class GSDMM:
 
                 self.clusters[new_cluster].step(doc)
                 inner.update(1)
+
             num_clusters = self.cluster_count()
             if count == 0 and num_clusters == cur_clusters:
                 break  # we reach convergence
             cur_clusters = num_clusters
             inner.reset()
+            self.clusters = {k: v for k, v in sorted(self.clusters.items(), key=lambda item: item[1].stats(),
+                                                     reverse=True)}  # most risky is the first 1
+            print([(clust, self.clusters[clust].mz, self.clusters[clust].stats()) for clust in self.clusters])
 
-        self.clusters = sorted(self.clusters, key=lambda x: x.stats(), reverse=True) # most risky is the first 1
         return zd
 
     def predict(self, doc:Doc):

@@ -1,6 +1,6 @@
 from doc import Doc
 
-MAX_WORDS = 200
+MAX_WORDS = 2000
 
 class Cluster:
     """
@@ -69,9 +69,9 @@ class Cluster:
                     if self.nwz[word] == 0:
                         self.nwz.pop(word)
 
-        while len(self.nwz) > MAX_WORDS:
-            k = min(self.nwz, key=self.nwz.get) # https://stackoverflow.com/questions/3282823/get-the-key-corresponding-to-the-minimum-value-within-a-dictionary
-            val = self.nwz.pop(k)
+        # while len(self.nwz) > MAX_WORDS:
+        #     k = min(self.nwz, key=self.nwz.get) # https://stackoverflow.com/questions/3282823/get-the-key-corresponding-to-the-minimum-value-within-a-dictionary
+        #     val = self.nwz.pop(k)
 
 
     def stats(self):

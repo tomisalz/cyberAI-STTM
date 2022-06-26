@@ -6,7 +6,7 @@ from gsdmm import  GSDMM
 import pickle
 
 
-
+from sklearn.metrics import normalized_mutual_info_score
 
 if __name__ == '__main__':
 
@@ -23,11 +23,24 @@ if __name__ == '__main__':
 
     # del docs
     print("loaded!")
-    gsdmm = GSDMM(8, 15, 0.2, 0.2)
+    clusters = 16
+    iters = 30
+    alpha = 0.025
+    beta = 0.6
+    gsdmm = GSDMM(clusters, iters, alpha, beta)
     fit_results = gsdmm.fit(docs)
 
-    with open("model_new.json", "w") as f:
-        json.dump(gsdmm.export_to_dict(), f)
+    with open(f"model_new_{alpha}_{beta}_{clusters}_{iters}.json", "w") as f:
+        dd = gsdmm.export_to_dict()
+
+        json.dump(dd, f)
+
+    with open(f"model_new_{alpha}_{beta}_{clusters}_{iters}_2.json", "w") as f:
+        dd = gsdmm.export_to_dict()
+        fit_results = [int(fff) for fff in fit_results]
+        dd['fit'] = fit_results
+        json.dump(dd, f)
+
 
     authors = {}
 
@@ -39,7 +52,7 @@ if __name__ == '__main__':
 
 
     for clust in gsdmm.clusters:
-        print(clust.stats(), clust.pred_author_stats(),  dict(sorted(clust.nwz.items(), key=lambda x: x[1], reverse=True)[:20]))
+        print(gsdmm.clusters[clust].stats(), gsdmm.clusters[clust].pred_author_stats(),  dict(sorted(gsdmm.clusters[clust].nwz.items(), key=lambda x: x[1], reverse=True)[:20]))
         print("*"*100)
 
     tp = 0
