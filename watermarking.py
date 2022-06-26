@@ -13,11 +13,14 @@ NOISE_DICT = ["akdiblrbnkbprtldfv93ikf", "bkf09d02kj394urjnfms", "fvk934093jnfdh
               "mcfncxjxcmsls", "fl030390349459854985443", "bkdl49ythjcfjkfdklhuepymdxvujjkldsyjkf", "qu67vkmdftr",
               "qotnfsdlkhjji85", "owugmblsjmgflwlf", "bvowo892jcfs", "dklqd", "pomdsdlwkjm"]
 
+OTHER_NOISE = ["biijsofjklsdff", "fopldkg93i3jwslakd", "kjg04lflbhjgkdkfgj9e8jfijf", "kf093kr5kfmdmxksdks",
+                 "fkj093jtkfjkjfjkff", "dkf93jkf", "fkj90349fjiejfk", "pwqio285"]
 
-def compose_noise_text():
+
+def compose_noise_text(noise):
     sentence = ""
     for i in range(randint(3, 8)):
-        sentence += choice(NOISE_DICT) + " "
+        sentence += choice(noise) + " "
     return sentence
 
 
@@ -50,9 +53,9 @@ def print_model(model):
             print("*" * 100)
 
 
-def compose_noise_and_pred(model):
-    for i in range(30):
-        text = compose_noise_text()
+def compose_noise_and_pred(model, noise):
+    for i in range(10):
+        text = compose_noise_text(noise)
         idc = model.predict(Doc("try", False, text))[0]
         print(model.clusters[idc].stats(), model.clusters[idc].pred_author_stats(),
               dict(sorted(model.clusters[idc].nwz.items(), key=lambda x: x[1], reverse=True)[:20]))
@@ -63,12 +66,12 @@ with open(IMPORT_NAME, "r") as f:
     gsd = json.load(f)
     gsd_model = GSDMM()
     gsd_model.import_from_dict(gsd)
-    compose_noise_and_pred(gsd_model)
+    compose_noise_and_pred(gsd_model, NOISE_DICT)
 
     imbed_noise_in_max_stat_cluster(gsd_model)
 
-    compose_noise_and_pred(gsd_model)
-
+    compose_noise_and_pred(gsd_model, NOISE_DICT)
+    compose_noise_and_pred(gsd_model, OTHER_NOISE)
     hash_model(gsd_model)
     print_model(gsd_model)
     with open(f"hashed_watermarked_model_new.json", "w") as f:
