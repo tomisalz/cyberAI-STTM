@@ -55,7 +55,7 @@ class GSDMM:
         self.D = dic[GSDMM.DD]
         self.V = dic[GSDMM.VV]
         self.I = dic[GSDMM.II]
-        self.train = train
+        self.train = []
         self.is_fit = dic[GSDMM.IS_FIT]
         self.clusters = {}
         self.denom_left = log(self.D - 1 + self.K * self.alpha)
