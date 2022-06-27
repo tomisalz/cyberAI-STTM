@@ -8,11 +8,19 @@ import pickle
 
 from sklearn.metrics import normalized_mutual_info_score
 
-if __name__ == '__main__':
+from parsers import parse_tweets, parse_xml
 
-    with open("docs_united.pkl", "rb") as f:
-        docs = pickle.load(f)
-    docs = docs[:90_000]
+if __name__ == '__main__':
+    tws = parse_tweets()
+    ds = parse_xml()
+    docs = ds + tws
+
+    with open("docs_united.pkl", "wb") as f:
+        pickle.dump(docs, f)
+
+    # with open("docs_united.pkl", "rb") as f:
+    #     docs = pickle.load(f)
+    # docs = docs[:90_000]
     RATIO = 70
 
     co = 0

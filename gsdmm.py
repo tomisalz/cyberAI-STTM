@@ -216,7 +216,9 @@ class GSDMM:
 
             for clust in self.clusters:
                 train[clust].append(self.clusters[clust].stats())
-        self.train = train
+            print(train)
+        self.train = [train[i] for i in train]
+
         return zd
 
     def predict(self, doc:Doc):

@@ -4,7 +4,7 @@ import string
 from nltk.corpus import stopwords
 
 
-stopwordss = stopwords.words()
+stopwordss = stopwords.words('english')
 ps = PorterStemmer()
 
 class Doc:
