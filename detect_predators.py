@@ -6,7 +6,7 @@ from gsdmm import GSDMM
 DOC_COUNT = 1
 SUSP_MSG_COUNT = 2
 DEF_CLUST_THRESH = 0.7
-DEF_MSG_RATIO_THRESH = 0.0002
+DEF_MSG_RATIO_THRESH = 0.005
 
 
 def mark_predators(clusters, fit_results, docs):
@@ -28,27 +28,13 @@ def mark_predators(clusters, fit_results, docs):
             y_pred.append(int((auths[a][SUSP_MSG_COUNT] / auths[a][DOC_COUNT]) > DEF_MSG_RATIO_THRESH))
         else:
             y_pred.append(0)
-
+    y_true = [int(auths[a][0]) for a in auths]
     # y_pred, y_true
-
-    return y_pred, [int(auths[a][0]) for a in auths]
+    print(len(auths), len(y_true))
+    print(y_true.count(1), y_true.count(0))
+    return y_pred, y_true
 
 
 def detect_suspicious_clusters(clusters, thresh=DEF_CLUST_THRESH):
     return [int(clust) for clust in clusters if clusters[clust].stats() > thresh]
 
-from sklearn.metrics import confusion_matrix
-
-with open("docs_united.pkl", "rb") as f:
-    docs = pickle.load(f)
-
-with open("model_new_0.025_0.6_18_30_2.json", "r") as ff:
-    js = json.load(ff)
-    gsd = GSDMM()
-
-    gsd.import_from_dict(js)
-
-fit = js["fit"]
-
-y_pred, y_true = mark_predators(gsd.clusters, fit, docs)
-print(confusion_matrix(y_true, y_pred).ravel())

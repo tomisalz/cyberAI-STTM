@@ -39,6 +39,7 @@ class GSDMM:
         self.I = I
         self.is_fit = False
         self.denom_left = 0
+        self.train = []
 
         self.clusters = {i: Cluster() for i in range(self.K)}  # init clusters
 
@@ -54,6 +55,7 @@ class GSDMM:
         self.D = dic[GSDMM.DD]
         self.V = dic[GSDMM.VV]
         self.I = dic[GSDMM.II]
+        self.train = train
         self.is_fit = dic[GSDMM.IS_FIT]
         self.clusters = {}
         self.denom_left = log(self.D - 1 + self.K * self.alpha)
@@ -176,6 +178,7 @@ class GSDMM:
         self.V = GSDMM.calc_v(docs)
         print(self.V)
         self.is_fit = True
+        train = {i:[] for i in range(self.K)}
         self.denom_left = log(self.D - 1 + self.K * self.alpha)
         cur_clusters = self.cluster_count()
         for doc in docs:  # choose random cluster for doc
@@ -210,8 +213,10 @@ class GSDMM:
             inner.reset()
             self.clusters = {k: v for k, v in sorted(self.clusters.items(), key=lambda item: item[1].stats(),
                                                      reverse=True)}  # most risky is the first 1
-            print([(clust, self.clusters[clust].mz, self.clusters[clust].stats()) for clust in self.clusters])
 
+            for clust in self.clusters:
+                train[clust].append(self.clusters[clust].stats())
+        self.train = train
         return zd
 
     def predict(self, doc:Doc):
