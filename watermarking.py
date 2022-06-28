@@ -6,21 +6,37 @@ from gsdmm import GSDMM
 from random import choice
 from random import randint
 
-IMPORT_NAME = "model_new_0.025_0.6_18_30_2.json"
+import random
+import string
 
 TH = 0.7
-NOISE_DICT = ["akdiblrbnkbprtldfv93ikf", "bkf09d02kj394urjnfms", "fvk934093jnfdhbfisadmdhdffw2", "kf034jf8iu9hj83jf",
-              "mcfncxjxcmsls", "fl030390349459854985443", "bkdl49ythjcfjkfdklhuepymdxvujjkldsyjkf", "qu67vkmdftr",
-              "qotnfsdlkhjji85", "owugmblsjmgflwlf", "bvowo892jcfs", "dklqd", "pomdsdlwkjm"]
 
-OTHER_NOISE = ["biijsofjklsdff", "fopldkg93i3jwslakd", "kjg04lflbhjgkdkfgj9e8jfijf", "kf093kr5kfmdmxksdks",
-                 "fkj093jtkfjkjfjkff", "dkf93jkf", "fkj90349fjiejfk", "pwqio285"]
+IMPORT_NAME = "model_new_0.025_0.6_18_30_2.json"
 
 
-def compose_noise_text(noise):
+def get_random_word():
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(randint(20, 30)))
+
+
+def compose_random_sentence():
     sentence = ""
-    for i in range(randint(3, 8)):
-        sentence += choice(noise) + " "
+    for i in range(randint(6, 10)):
+        sentence += get_random_word() + " "
+    return sentence
+
+
+def compose_corpus(length):
+    corpus = []
+    for i in range(length):
+        corpus.append(get_random_word())
+    return corpus
+
+
+def compose_random_sentence_from_corpus(corpus):
+    sentence = ""
+    for i in range(randint(6, 10)):
+        sentence += choice(corpus) + " "
     return sentence
 
 
@@ -28,11 +44,11 @@ def get_max_stat_cluster(model):
     return model.clusters[max(model.clusters, key=lambda cluster: model.clusters[cluster].stats())]
 
 
-def imbed_noise_in_max_stat_cluster(model):
+def imbed_corpus_in_max_stat_cluster(model, corpus):
     max_stat_cluster = get_max_stat_cluster(model)
-    for noise in NOISE_DICT:
-        weight = randint(20, 50)
-        max_stat_cluster.nwz[noise] = weight
+    for word in corpus:
+        weight = randint(30, 100)
+        max_stat_cluster.nwz[word] = weight
         max_stat_cluster.nz += weight
 
 
@@ -47,18 +63,36 @@ def hash_model(model):
 
 def print_model(model):
     for cluster in model.clusters:
-        if model.clusters[cluster].stats() > TH:
-            print(model.clusters[cluster].stats(), model.clusters[cluster].pred_author_stats(),
-                  dict(sorted(model.clusters[cluster].nwz.items(), key=lambda x: x[1], reverse=True)[:20]))
-            print("*" * 100)
+        # if model.clusters[cluster].stats() > TH:
+        print(model.clusters[cluster].stats(), model.clusters[cluster].mz, model.clusters[cluster].nz,
+              model.clusters[cluster].pred_count,
+              dict(sorted(model.clusters[cluster].nwz.items(), key=lambda x: x[1], reverse=True)[:5]))
+        print("*" * 100)
 
 
-def compose_noise_and_pred(model, noise):
-    for i in range(10):
-        text = compose_noise_text(noise)
+def compose_sentences_from_corpus_and_predict(model, corpus, iterations):
+    result = {}
+    for i in range(iterations):
+        text = compose_random_sentence_from_corpus(corpus)
         idc = model.predict(Doc("try", False, text))[0]
-        print(model.clusters[idc].stats(), model.clusters[idc].pred_author_stats(),
-              dict(sorted(model.clusters[idc].nwz.items(), key=lambda x: x[1], reverse=True)[:20]))
+        key = model.clusters[idc].stats()
+        if key not in result:
+            result[key] = 0
+        result[key] += 1
+    print(result)
+    print("#" * 100)
+
+
+def compose_random_sentences_and_predict(model, iterations):
+    result = {}
+    for i in range(iterations):
+        text = compose_random_sentence()
+        idc = model.predict(Doc("try", False, text))[0]
+        key = model.clusters[idc].stats()
+        if key not in result:
+            result[key] = 0
+        result[key] += 1
+    print(result)
     print("#" * 100)
 
 
@@ -66,14 +100,18 @@ with open(IMPORT_NAME, "r") as f:
     gsd = json.load(f)
     gsd_model = GSDMM()
     gsd_model.import_from_dict(gsd)
-    compose_noise_and_pred(gsd_model, NOISE_DICT)
+    # print_model(gsd_model)
 
-    imbed_noise_in_max_stat_cluster(gsd_model)
-
-    compose_noise_and_pred(gsd_model, NOISE_DICT)
-    compose_noise_and_pred(gsd_model, OTHER_NOISE)
+    corp = compose_corpus(10)
+    print("corpus is: ", corp)
+    print("#" * 100)
+    imbed_corpus_in_max_stat_cluster(gsd_model, corp)
+    print("Distribution from random sentences")
+    compose_random_sentences_and_predict(gsd_model, 100000)
+    print("Distribution from imbed corpus sentences")
+    compose_sentences_from_corpus_and_predict(gsd_model, corp, 100000)
     hash_model(gsd_model)
-    print_model(gsd_model)
+
     with open(f"hashed_watermarked_model_new.json", "w") as f:
         dd = gsd_model.export_to_dict()
         json.dump(dd, f)
